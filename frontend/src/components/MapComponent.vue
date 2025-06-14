@@ -101,12 +101,11 @@
 
 <script>
 import AppSpinner from './Spinner.vue'
-import { ymapLoader } from 'vue-yandex-maps'
+// ✅ Импортируем функцию загрузки API вместо неопределённого ymapLoader:
+import { loadYmap } from 'vue-yandex-maps'
 
 export default {
-  components: {
-    AppSpinner
-  },
+  components: { AppSpinner },
   data() {
     return {
       startQuery: '',
@@ -128,79 +127,84 @@ export default {
     }
   },
   async mounted() {
+    // ⬇️ Ждём загрузки API и инициализации карты при монтировании компонента
     await this.initializeMap()
   },
   methods: {
     async initializeMap() {
-      const ymaps = await ymapLoader.load('https://api-maps.yandex.ru/2.1/', {
+      // ⬇️ Загружаем API Яндекс.Карт с нужными настройками (ключ, язык, версия):
+      await loadYmap({
         apiKey: process.env.VUE_APP_YMAPS_KEY,
-        lang: 'ru_RU'
+        lang: 'ru_RU',
+        version: '2.1',
+        coordorder: 'latlong'  // используем широта-долгота
       })
-
+      const ymaps = window.ymaps  // глобальный объект Yandex Maps после загрузки
+      // ⬇️ Инициализируем карту в контейнере с center на Краснодар:
       this.map = new ymaps.Map(this.$refs.map, {
-        center: [45.0448, 38.976],
+        center: [45.0448, 38.976],  // координаты Краснодара
         zoom: 10,
         controls: ['zoomControl']
       })
     },
 
     async geocode(query) {
-      const ymaps = await ymapLoader.get()
-      return new Promise((resolve) => {
-        ymaps.geocode(query, { results: 1 }).then((res) => {
-          const firstGeoObject = res.geoObjects.get(0)
-          resolve(firstGeoObject ? firstGeoObject.geometry.getCoordinates() : null)
-        })
-      })
+      const ymaps = window.ymaps
+      // ⬇️ Вызываем геокодер Яндекса для поиска координат по адресу
+      const res = await ymaps.geocode(query, { results: 1 })
+      const firstGeoObject = res.geoObjects.get(0)
+      // Вернём координаты первого найденного объекта или null, если не найдено
+      return firstGeoObject ? firstGeoObject.geometry.getCoordinates() : null
     },
 
     async geocodeStart() {
       this.startCoords = await this.geocode(this.startQuery)
-      if (!this.startCoords) alert('Адрес отправки не найден')
+      if (!this.startCoords) {
+        alert('Адрес отправления не найден')
+      }
     },
 
     async geocodeEnd() {
       this.endCoords = await this.geocode(this.endQuery)
-      if (!this.endCoords) alert('Адрес назначения не найден')
+      if (!this.endCoords) {
+        alert('Адрес назначения не найден')
+      }
     },
 
     async buildRoute() {
-      if (!this.startCoords || !this.endCoords) return
+      if (!this.startCoords || !this.endCoords) return  // проверка, есть ли точки
 
       this.isBuilding = true
-      const ymaps = await ymapLoader.get()
-
+      const ymaps = window.ymaps
+      // Если ранее строился маршрут – удаляем его с карты
       if (this.route) {
         this.map.geoObjects.remove(this.route)
       }
-
+      // ⬇️ Строим новый маршрут между startCoords и endCoords
       this.route = new ymaps.multiRouter.MultiRoute({
-        referencePoints: [
-          this.startCoords,
-          this.endCoords
-        ],
-        params: {
-          routingMode: 'auto'
-        }
+        referencePoints: [ this.startCoords, this.endCoords ],
+        params: { routingMode: 'auto' }
       }, {
         boundsAutoApply: true,
         wayPointStartIconColor: '#3b82f6',
         wayPointFinishIconColor: '#ef4444'
       })
-
+      // Добавляем маршрут на карту
       this.map.geoObjects.add(this.route)
 
+      // Когда маршрут успешно рассчитан, извлекаем информацию
       this.route.model.events.add('requestsuccess', () => {
         const activeRoute = this.route.getActiveRoute()
         this.routeInfo = {
           distance: activeRoute.properties.get('distance').text,
           duration: activeRoute.properties.get('duration').text
         }
-        this.isBuilding = false
+        this.isBuilding = false  // снимаем флаг загрузки маршрута
       })
     },
 
     applyRoute(route) {
+      // Применяем ранее сохранённый маршрут из истории
       this.startQuery = route.start
       this.endQuery = route.end
       this.startCoords = route.startCoords
@@ -209,6 +213,7 @@ export default {
     },
 
     saveRoute() {
+      // Сохраняем текущий маршрут в историю (через Vuex store)
       this.$store.dispatch('saveRoute', {
         start: this.startQuery,
         end: this.endQuery,
@@ -217,7 +222,7 @@ export default {
         ...this.routeInfo,
         date: new Date().toISOString()
       })
-      alert('Маршрут успешно сохранен!')
+      alert('Маршрут успешно сохранён!')
     },
 
     deleteHistoryRoute(index) {
