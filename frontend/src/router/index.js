@@ -1,29 +1,30 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import MapComponent from '../components/MapComponent.vue'
-import SavedRoutesView from '../views/SavedRoutes.vue' // Правильный путь
+import HomePage from '@/views/HomePage.vue'
+import MapPage from '@/views/MapPage.vue'
+import TestPage from '@/views/TestPage.vue'
 
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView
+    name: 'Home',
+    component: HomePage,
   },
   {
     path: '/map',
-    name: 'map',
-    component: MapComponent
+    name: 'MapPage',
+    component: MapPage,
   },
   {
-    path: '/saved',
-    name: 'saved',
-    component: SavedRoutesView
-  }
+    path: '/test',
+    name: 'TestPage',
+    component: TestPage,
+  },
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes
+  history: createWebHistory(),
+  routes,
 })
 
 export default router

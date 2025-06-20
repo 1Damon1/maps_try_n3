@@ -1,45 +1,34 @@
 <template>
   <div class="saved-routes">
-    <div v-if="routes.length === 0" class="empty">
-      Нет сохраненных маршрутов
-    </div>
-    <div
-      v-for="(route, index) in routes"
-      :key="index"
-      class="route-card"
-    >
-      <div class="route-info">
-        <div class="route-address">
-          <span>📍 {{ route.start }}</span>
-          <span>→</span>
-          <span>🏁 {{ route.end }}</span>
-        </div>
-        <div class="route-stats">
-          <span>🛣 {{ route.distance }} км</span>
-          <span>⏱ {{ route.duration }} мин</span>
-        </div>
-      </div>
-      <button
-        @click="deleteRoute(index)"
-        class="delete-btn"
-      >
-        Удалить
-      </button>
-    </div>
+    <h3>Сохранённые маршруты</h3>
+    <ul>
+      <li v-for="(route, index) in savedRoutes" :key="route.date">
+        <span>{{ route.start }} → {{ route.end }}</span>
+        <span>({{ route.date | formatDate }})</span>
+        <button @click="$emit('apply', route)">Применить</button>
+        <button @click="removeLocal(index)">Удалить</button>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script>
 export default {
   name: 'SavedRoutes',
-  computed: {
-    routes() {
-      return this.$store.getters.sortedRoutes
+  props: {
+    savedRoutes: {
+      type: Array,
+      required: true
     }
   },
   methods: {
-    deleteRoute(index) {
-      this.$store.dispatch('deleteRoute', index)
+    removeLocal(index) {
+      this.$emit('delete', index)
+    }
+  },
+  filters: {
+    formatDate(value) {
+      return new Date(value).toLocaleString()
     }
   }
 }
@@ -47,49 +36,20 @@ export default {
 
 <style scoped>
 .saved-routes {
-  padding: 1rem;
+  margin-top: 16px;
 }
-
-.route-card {
-  background: var(--card-bg);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+.saved-routes ul {
+  list-style: none;
+  padding: 0;
+}
+.saved-routes li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
 }
-
-.route-address {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.route-stats {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  opacity: 0.8;
-}
-
-.delete-btn {
-  background: var(--error-color);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.delete-btn:hover {
-  opacity: 0.8;
-}
-
-.empty {
-  text-align: center;
-  padding: 2rem;
-  opacity: 0.6;
+.saved-routes button {
+  margin-left: 8px;
 }
 </style>

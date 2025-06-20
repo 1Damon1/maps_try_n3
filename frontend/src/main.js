@@ -1,21 +1,10 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import store from './store'
-import VueYandexMaps from 'vue-yandex-maps'
-
-// Конфигурация Яндекс.Карт
-const yandexMapsConfig = {
-  apiKey: process.env.VUE_APP_YMAPS_KEY,
-  lang: 'ru_RU',
-  version: '2.1',
-  coordorder: 'latlong'
-}
+import Antd from 'ant-design-vue'
+import 'ant-design-vue/dist/reset.css'
 
 const app = createApp(App)
-
-// Инициализация плагина
-app.use(VueYandexMaps, yandexMapsConfig)
-app.use(store)
 app.use(router)
+app.use(Antd)
 app.mount('#app')

@@ -57,5 +57,14 @@ def create_route():
     return jsonify({"message": "Route saved"}), 201
 
 
+@app.route('/api/routes/<int:id>', methods=['DELETE'])
+def delete_route(id):
+    route = Route.query.get_or_404(id)
+    db.session.delete(route)
+    db.session.commit()
+    return jsonify({'message': 'Deleted'}), 200
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,21 +1,19 @@
 export default {
   namespaced: true,
-
   state: () => ({
-    isDark: localStorage.getItem('theme') === 'dark' || false
+    theme: localStorage.getItem('theme') || 'light'
   }),
-
   mutations: {
-    TOGGLE_THEME(state) {
-      state.isDark = !state.isDark
-      localStorage.setItem('theme', state.isDark ? 'dark' : 'light')
-      document.documentElement.classList.toggle('dark', state.isDark)
+    SET_THEME(state, theme) {
+      state.theme = theme
+      localStorage.setItem('theme', theme)
+      document.documentElement.setAttribute('data-theme', theme)
     }
   },
-
   actions: {
-    initializeTheme({ state }) {
-      document.documentElement.classList.toggle('dark', state.isDark)
+    toggleTheme({ commit, state }) {
+      const next = state.theme === 'light' ? 'dark' : 'light'
+      commit('SET_THEME', next)
     }
   }
 }
